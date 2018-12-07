@@ -312,6 +312,24 @@ AVLNode* TreeSet::AVLDelete(AVLNode *&root, int val, int &shorter, int &success)
     return root;
 }
 
+void TreeSet::addBST(AVLNode *&root, int addData){
+    if (root == NULL){
+        AVLNode *pTemp = new AVLNode(addData);
+        root = pTemp;
+    }
+
+    else{
+        if(addData < root->key){
+            addBST(root->left, addData);
+        }
+        else{
+            addBST(root->right, addData);
+        }
+    }
+}
+
+
+
 void TreeSet::clearRec(AVLNode* root) {
 	if (root != NULL) {
 		clearRec(root->left);
@@ -343,9 +361,9 @@ bool TreeSet::contains(int val) {
 void exportVal(AVLNode *root, int *arr, int *i){
     if(root == NULL){return;}
     if(root != NULL){
-        exportVal(root->left,arr, i);
         arr[*i] = root->key;
         ++*i;
+        exportVal(root->left,arr, i);
         exportVal(root->right,arr, i);
     }
 }
@@ -357,7 +375,7 @@ void TreeSet::copy(const TreeSet& set) {
     int i = 0;
     exportVal(set.root, arrCopy, &i);
     for(int i = 0 ; i < set.count; i++){
-        TreeSet::add(arrCopy[i]);}
+        TreeSet::addBST(root,arrCopy[i]);}
 }
 
 int TreeSet::first() {
@@ -485,6 +503,36 @@ int TreeSet::remove(int val) {
 	else {count--; return 1;};
 }
 
+int partition(int *arrQuickSort, int first, int last)
+{
+    int i,index,pivot;
+    index = first;
+    pivot = arrQuickSort[last];
+    for(i = first; i < last; i++)
+    {
+        if(arrQuickSort[i] <= pivot)
+        {
+            swap(arrQuickSort[index], arrQuickSort[i]);
+            index++;
+        }
+    }
+    swap(arrQuickSort[index], arrQuickSort[last]);
+    return index;
+}
+
+int quickSort(int *arrQuickSort, int first, int last)
+{
+    int index;
+    if(first >= last)
+        return 0;
+    {
+        index = partition(arrQuickSort,first,last);
+        quickSort(arrQuickSort, first, index - 1);
+        quickSort(arrQuickSort, index + 1, last);
+    }
+}
+
+
 TreeSet* TreeSet::subSet(int fromVal, int toVal) {
 	// TODO
 	TreeSet *subHead;
@@ -495,6 +543,7 @@ TreeSet* TreeSet::subSet(int fromVal, int toVal) {
     int *setArr = new int[count];
     int i = 0;
     exportVal(root, setArr, &i);
+    quickSort(setArr,0,count - 1);
 
     int minElement = TreeSet::higher(fromVal);
     int maxElement = TreeSet::lower(toVal);
