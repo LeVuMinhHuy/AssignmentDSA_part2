@@ -27,6 +27,7 @@ public:
 	// YOUR TASKS START HERE
     AVLNode* AVLInsert(AVLNode *&root, int inputData, bool &taller);
 	AVLNode* AVLDelete(AVLNode *&root, int val, int &shorter, int &success);
+    void addBST(AVLNode *&root, int addData);
 
 	int add(int val);
 	bool contains(int val);
