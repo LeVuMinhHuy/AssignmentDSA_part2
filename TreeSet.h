@@ -25,10 +25,10 @@ public:
 	friend ostream& operator<<(ostream& os, const TreeSet& t);
 
 	// YOUR TASKS START HERE
-    AVLNode* AVLInsert(AVLNode *&root, int inputData, bool &taller);
-	AVLNode* AVLDelete(AVLNode *&root, int val, int &shorter, int &success);
+    bool AVLInsert(AVLNode *&root, int inputData, bool &taller);
+    bool AVLDelete(AVLNode *&root, int val, int &shorter);
     void addBST(AVLNode *&root, int addData);
-
+    int higherEqual(int val);
 	int add(int val);
 	bool contains(int val);
 	void copy(const TreeSet& set);
@@ -39,5 +39,7 @@ public:
 	int remove(int val);
 	TreeSet* subSet(int fromVal, int toVal);
 	int size();
+
+
 	// END HERE
 };

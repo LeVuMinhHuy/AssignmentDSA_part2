@@ -17,284 +17,206 @@ TreeSet::~TreeSet()
 {
 	clear();
 }
-
-
-AVLNode *rotateLeft(AVLNode *root){
-    AVLNode *tempPtr = root->right;
-    root->right = tempPtr->left;
-    tempPtr->left = root;
-    root  = tempPtr;
-    return root;
+void rotateLeft(AVLNode *&root){
+    AVLNode *tempPtr = root;
+    root = root->right;
+    tempPtr->right = root->left;
+    root->left = tempPtr;
 }
 
-AVLNode *rotateRight(AVLNode *root){
-    AVLNode *tempPtr = root->left;
-    root->left = tempPtr->right;
-    tempPtr->right = root;
-    root = tempPtr;
-    return root;
+void rotateRight(AVLNode *&root){
+    AVLNode *tempPtr = root;
+    root = root->left;
+    tempPtr->left = root->right;
+    root->right = tempPtr;
 };
 
-AVLNode *leftBalance(AVLNode *root, bool &taller){
+bool leftBalance(AVLNode *&root){
     AVLNode *leftTree = root->left;
     if(leftTree->balance == 1){
+        rotateRight(root);
         root->balance = 0;
-        leftTree->balance = 0;
-        root = rotateRight(root);
-        taller = false;
-    }
-    else{
-        AVLNode *rightTree = leftTree->right;
-        if(rightTree->balance == 1){
-            root->balance = -1;
-            leftTree->balance = 0;
-        }
-        else if (rightTree->balance == 0){
-            leftTree->balance = 0;
-            root->balance = 0;
-        }
-        else{
-            root->balance = 0;
-            leftTree->balance = 1;
-        }
-
-        rightTree->balance = 0;
-        root->left = rotateLeft(leftTree);
-        root = rotateRight(root);
-        taller = false;
+        root->right->balance = 0;
+        return 0;
     }
 
-    return root;
+    if(leftTree->balance == -1){
+    	rotateLeft(root->left);
+    	rotateRight(root);
+    	if(root->balance == 1){
+    		root->balance = 0;
+    		root->left->balance = 0;
+    		root->right->balance = -1;
+    		return 0;
+    	}
+    	if(root->balance == 0){
+    		root->balance = 0;
+    		root->left->balance = 0;
+    		root->right->balance = 0;
+    		return 0;
+    	}
+    	if(root->balance == -1){
+    		root->balance = 0;
+    		root->left->balance = 1;
+    		root->right->balance = 0;
+    		return 0;
+    	}
+    }
+
+    if(leftTree->balance == 0){
+    	rotateRight(root);
+    	root->balance = -1;
+    	root->right->balance = 1;
+    	return 1;
+    }
 }
 
-AVLNode *rightBalance(AVLNode *root, bool &taller){
+
+bool rightBalance(AVLNode *&root){
     AVLNode *rightTree = root->right;
-
     if(rightTree->balance == -1){
+        rotateLeft(root);
         root->balance = 0;
-        rightTree->balance = 0;
-        root = rotateLeft(root);
-        taller = false;
+        root->left->balance = 0;
+        return 0;
     }
 
-    else{
-
-        AVLNode *leftTree = rightTree->left;
-        if(leftTree->balance == -1){
-            root->balance = 1;
-            rightTree->balance = 0;
-        }
-        else if(leftTree->balance == 0){
-            root->balance = 0;
-            rightTree->balance = 0;
-        }
-        else{
-            root->balance = 0;
-            rightTree->balance = -1;
-        }
-
-        leftTree->balance = 0;
-        root->right = rotateRight(rightTree);
-        root = rotateLeft(root);
-        taller = false;
+    if(rightTree->balance == 1){
+    	rotateRight(root->right);
+    	rotateLeft(root);
+    	if(root->balance == 1){
+    		root->balance = 0;
+    		root->left->balance = 0;
+    		root->right->balance = -1;
+    		return 0;
+    	}
+    	if(root->balance == 0){
+    		root->balance = 0;
+    		root->left->balance = 0;
+    		root->right->balance = 0;
+    		return 0;
+    	}
+    	if(root->balance == -1){
+    		root->balance = 0;
+    		root->left->balance = 1;
+    		root->right->balance = 0;
+    		return 0;
+    	}
     }
-    return root;
+
+    if(rightTree->balance == 0){
+    	rotateLeft(root);
+    	root->balance = 1;
+    	root->left->balance = -1;
+    	return 1;
+    }
+
 }
 
-AVLNode* TreeSet::AVLInsert(AVLNode *&root, int inputData, bool &taller){
+
+bool TreeSet::AVLInsert(AVLNode *&root, int inputData, bool &taller){
 
     if(root == NULL){
         root = new AVLNode(inputData);
         taller = true;
+        return 1;
     }
 
-    else if(inputData == root->key){
+    if(inputData == root->key){
         taller = false;
         duplicateData = true;
+        return 0;
     }
 
     else if(inputData < root->key){
-        root->left = AVLInsert(root->left, inputData, taller);
+        int addData = AVLInsert(root->left, inputData, taller);
+        if(!taller){return addData;}
         if(taller){
-            if(root->balance == 1)
-            {
-                root = leftBalance(root, taller);
-            }
-            else if (root->balance == 0){
+            if (root->balance == 0){
                 root->balance = 1;
+                return 1;
             }
-            else { root->balance = 0; taller = false;}
+            if(root->balance == -1)
+            {
+            	root->balance = 0; taller = false;
+            	return 1;
+            }
+
+            taller = leftBalance(root);
+            return 1;
         }
     }
 
     else{
+        int addData = AVLInsert(root->right, inputData, taller);
 
-        root->right = AVLInsert(root->right, inputData, taller);
-
+        if(!taller){return addData;}
         if(taller){
-            if(root->balance == 1){
-                root->balance = 0;
-                taller = false;
-            }
-            else if (root->balance == 0){
+            if(root->balance == 0){
                 root->balance = -1;
+                return 1;
             }
-            else{
-                root = rightBalance(root, taller);
+            if (root->balance == 1){
+                root->balance = 0; taller = false;
+                return 1;
             }
+
+            taller = rightBalance(root);
+            return 1;
         }
     }
-
-    return root;
 };
 
-bool searchVal(AVLNode *root, int val){
-    if(root == NULL){
-    return false;}
-
-    if(root->key < val){
-        return searchVal(root->right, val);
-    }
-    else if(root->key > val){
-        return searchVal(root->left, val);
-    }
-    else{return true;}
-
-    return false;
-}
-
-AVLNode *deleteRightBalance(AVLNode *&root, int &shorter){
-    if(root->balance == 1){
-        root->balance = 0;
-    }
-    else if(root->balance == 0){
-        root->balance = -1;
-        shorter = 0;
-    }
-
-    else{
-        AVLNode *rightTree = root->right;
-        if(rightTree->balance == 1){
-            AVLNode *leftTree = rightTree->left;
-            if(leftTree->balance == 1){
-                rightTree->balance = -1;
-                root->balance = 0;
-            }
-            else if(leftTree->balance == 0){
-                root->balance = 1;
-                rightTree->balance = 0;
-            }
-            else{
-                root->balance = 1;
-                rightTree->balance = 0;
-            }
-
-            leftTree->balance = 0;
-            root->right = rotateRight(rightTree);
-            root = rotateLeft(root);
-        }
-
-        else{
-            if(rightTree->balance != 0){
-                root->balance = 0;
-                rightTree->balance = 0;
-            }
-            else{
-                root->balance = -1;
-                rightTree->balance = 1;
-                shorter = 0;
-            }
-
-            root = rotateLeft(root);
-        }
-
-    }
-    return root;
-}
-
-AVLNode *deleteLeftBalance(AVLNode *&root, int &shorter){
-    if (root->balance == -1){
-        root->balance = 0;
-    }
-
-    else if (root->balance == 0){
-        root->balance = 1;
-        shorter = 0;
-    }
-
-    else{
-        AVLNode *leftTree = root->left;
-        if(leftTree->balance == -1){
-            AVLNode *rightTree = leftTree->right;
-            if(rightTree->balance == -1){
-                leftTree->balance = 1;
-                root->balance = 0;
-            }
-            else if(rightTree->balance == 0){
-                root->balance = -1;
-                leftTree->balance = 0;
-            }
-            else{
-                root->balance = -1;
-                leftTree->balance = 0;
-            }
-
-            rightTree->balance = 0;
-            root->left = rotateLeft(leftTree);
-            root = rotateRight(root);
-        }
-        else{
-            if(leftTree->balance != 0){
-                root->balance = 0;
-                leftTree->balance = 0;
-            }
-            else{
-                root->balance = 1;
-                leftTree->balance = -1;
-                shorter = 0;
-            }
-            root = rotateRight(root);
-        }
-    }
-    return root;
-}
-
-AVLNode* TreeSet::AVLDelete(AVLNode *&root, int val, int &shorter, int &success){
+bool TreeSet::AVLDelete(AVLNode *&root, int val, int &shorter){
 
     if(root == NULL){
         shorter = 0;
-        success = 0;
         return NULL;
     }
 
     if(val < root->key){
-        root->left = AVLDelete(root->left, val, shorter, success);
+        int removeData = AVLDelete(root->left, val, shorter);
+        if(!shorter){shorter = false; return removeData;}
         if(shorter){
-            root = deleteRightBalance(root,shorter);
+            if(root->balance == 0){ root->balance = -1; shorter = false; return 1;}
+            if(root->balance == 1){root->balance = 0; shorter = true; return 1;}
+        	shorter = (!rightBalance(root));
+        	return 1;
         }
 
     }
-    else if(val > root->key){
-        root->right = AVLDelete(root->right, val, shorter, success);
+    if(val > root->key){
+        int removeData = AVLDelete(root->right, val, shorter);
+        if(!shorter){shorter = false; return removeData;}
         if(shorter){
-            root = deleteLeftBalance(root,shorter);
+            if(root->balance == 0){ root->balance = 1; shorter = false; return 1;}
+            if(root->balance == -1){root->balance = 0; shorter = true; return 1;}
+        	shorter = (!leftBalance(root));
+        	return 1;
         }
     }
+
     else{
-        AVLNode *deleteAVLNode = root;
-        if(root->right == NULL){
-            AVLNode *newRoot = root->left;
-            success = 1;
-            shorter = 1;
+        if(root->left == NULL){
+        	if(root->right == NULL){
+        		free(root);
+        		root = NULL;
+        		shorter = 1;
+        		return 1;
+        	}
+        	AVLNode *deleteAVLNode = root;
+            root = root->right;
             free(deleteAVLNode);
-            return newRoot;
+            shorter = 1;
+            return 1;
         }
-        else if(root->left == NULL){
-            AVLNode *newRoot = root->right;
-            success = 1;
-            shorter = 1;
+
+        if(root->right == NULL){
+        	AVLNode *deleteAVLNode = root;
+            root = root->left;
             free(deleteAVLNode);
-            return newRoot;
+            shorter = 1;
+            return 1;
         }
         else{
             AVLNode *exchPtr = root->left;
@@ -302,14 +224,16 @@ AVLNode* TreeSet::AVLDelete(AVLNode *&root, int val, int &shorter, int &success)
                 exchPtr = exchPtr->right;
             }
             root->key = exchPtr->key;
-            root->left = AVLDelete(root->left,exchPtr->key,shorter,success);
+            AVLDelete(root->left,exchPtr->key,shorter);
+            if(!shorter){return 1;}
             if (shorter){
-                root = deleteRightBalance(root,shorter);
+            	if(root->balance == 0){ root->balance = 1; shorter = false; return 1;}
+                if(root->balance == -1){root->balance = 0; shorter = true; return 1;}
+                shorter = (!leftBalance(root));
+                return 1;
             }
         }
     }
-
-    return root;
 }
 
 void TreeSet::addBST(AVLNode *&root, int addData){
@@ -346,12 +270,28 @@ void TreeSet::clear() {
 
 int TreeSet::add(int val) {
 	// TODO
-    bool taller = true;
-    AVLInsert(root, val, taller);
-    if(duplicateData){duplicateData = false; return 0;}
-    count++;
-    return 1;
+   bool taller = true;
+   AVLInsert(root, val, taller);
+   if(duplicateData){duplicateData = false; return 0;}
+   count++;
+   return 1;
 }
+
+bool searchVal(AVLNode *root, int val){
+    if(root == NULL){
+    return false;}
+
+    if(root->key < val){
+        return searchVal(root->right, val);
+    }
+    else if(root->key > val){
+        return searchVal(root->left, val);
+    }
+    else{return true;}
+
+    return false;
+}
+
 
 bool TreeSet::contains(int val) {
 	// TODO
@@ -496,76 +436,67 @@ int TreeSet::lower(int val) {
 
 int TreeSet::remove(int val) {
 	// TODO
-	int success = 1;
 	int shorter = 1;
-	AVLDelete(root,val,shorter,success);
+	bool success;
+	success = AVLDelete(root,val,shorter);
 	if(success == 0){return 0;}
 	else {count--; return 1;};
 }
 
-int partition(int *arrQuickSort, int first, int last)
-{
-    int i,index,pivot;
-    index = first;
-    pivot = arrQuickSort[last];
-    for(i = first; i < last; i++)
-    {
-        if(arrQuickSort[i] <= pivot)
-        {
-            swap(arrQuickSort[index], arrQuickSort[i]);
-            index++;
+int TreeSet::higherEqual(int val) {
+    if(root==NULL)
+        return -1;
+
+    AVLNode *pTemp = root;
+    AVLNode *result = NULL;
+
+    while(pTemp){
+        if(pTemp->key > val){
+            result = pTemp;
+            pTemp = pTemp->left;
         }
+        else if(pTemp->key == val){
+            return val;
+        }
+        else
+            pTemp = pTemp->right;
     }
-    swap(arrQuickSort[index], arrQuickSort[last]);
-    return index;
-}
 
-int quickSort(int *arrQuickSort, int first, int last)
-{
-    int index;
-    if(first >= last)
-        return 0;
-    {
-        index = partition(arrQuickSort,first,last);
-        quickSort(arrQuickSort, first, index - 1);
-        quickSort(arrQuickSort, index + 1, last);
-    }
+    if(result != NULL)
+        return result->key;
+    return -1;
 }
-
 
 TreeSet* TreeSet::subSet(int fromVal, int toVal) {
 	// TODO
-	TreeSet *subHead;
-    static TreeSet subSet;
-    subSet.clear();
-    subHead = &subSet;
+	TreeSet *subTree = new TreeSet();
+	if(root == NULL){
+        return subTree;
+	}
 
-    int *setArr = new int[count];
-    int i = 0;
-    exportVal(root, setArr, &i);
-    quickSort(setArr,0,count - 1);
-
-    int minElement = TreeSet::higher(fromVal);
-    int maxElement = TreeSet::lower(toVal);
-    int minIndex =-1; int maxIndex = -1;
-    int tempMinIndex;
-
-    for(int i = 0 ; i < count ; i++){
-        if(setArr[i] == fromVal){minIndex = i;}
-        if(setArr[i] == minElement){tempMinIndex =  i;}
-        if(setArr[i] == maxElement){maxIndex = i;}
-    }
-    if(minIndex == -1){minIndex = tempMinIndex;}
-
-    for(int i = minIndex ; i < maxIndex + 1; i++){
-        subHead->add(setArr[i]);
+    if(fromVal > last() || toVal < first()){
+        return subTree;
     }
 
-    return subHead;
+    int newFromVal;
+
+    while(true){
+        if((newFromVal = higherEqual(fromVal)) >= toVal)
+            break;
+        else{
+            if(newFromVal != -1){
+                fromVal = newFromVal + 1;
+                subTree->add(newFromVal);
+            }
+
+            else
+                return subTree;
+        }
+    }
+
+    return subTree;
 }
-
 int TreeSet::size() {
 	// TODO
 	return count;
 }
-
